@@ -47,19 +47,21 @@ class Grafo:
 
     def obtener_relaciones(self):
         relaciones = []
-        estados = self.obtener_estados()
 
         for origen in self.grafo:
             for destino, costo in self.grafo[origen].items():
-                if estados.index(origen) < estados.index(destino):
-                    relaciones.append((origen, destino, costo))
+                if self.grafo[destino].get(origen) == costo:
+                    if not any(
+                        r[0] == destino and r[1] == origen
+                        for r in relaciones
+                    ):
+                        relaciones.append((origen, destino, costo))
 
         return relaciones
 
     def buscar_recorrido_completo(self, cantidad, inicio=None, destino=None):
         rutas = []
-        estados = self.obtener_estados()
-        inicios = [inicio] if inicio else estados
+        inicios = [inicio] if inicio else self.obtener_estados()
 
         def explorar(actual, ruta, costo):
             if len(ruta) == cantidad:
@@ -117,13 +119,7 @@ class Grafo:
                 if origen != final:
                     explorar(origen, final, [origen], 0)
 
-        rutas.sort(
-            key=lambda x: (
-                x["costo"],
-                x["traslados"]
-            )
-        )
-
+        rutas.sort(key=lambda x: (x["costo"], x["traslados"]))
         return rutas
 
 
@@ -135,8 +131,8 @@ class Aplicacion:
         self.ruta = []
         self.alternativas = []
         self.tipo_actual = ""
-
         self.estado_arrastrado = None
+
         self.ultima_x = 0
         self.ultima_y = 0
 
@@ -160,60 +156,39 @@ class Aplicacion:
         self.ventana.configure(bg="#111827")
 
     def crear_interfaz(self):
-        encabezado = tk.Frame(
-            self.ventana,
-            bg="#172033",
-            height=55
-        )
+        encabezado = tk.Frame(self.ventana, bg="#172033", height=50)
         encabezado.pack(fill="x")
         encabezado.pack_propagate(False)
 
         tk.Label(
             encabezado,
             text="RUTAS MEXICO",
-            font=("Arial", 20, "bold"),
+            font=("Arial", 19, "bold"),
             bg="#172033",
             fg="#5eead4"
-        ).pack(side="left", padx=20, pady=10)
+        ).pack(side="left", padx=20, pady=8)
 
-        tk.Label(
-            encabezado,
-            text="SISTEMA DE RECORRIDOS MEDIANTE GRAFOS",
-            font=("Arial", 9, "bold"),
-            bg="#172033",
-            fg="white"
-        ).pack(side="right", padx=20)
-
-        tarjetas = tk.Frame(
-            self.ventana,
-            bg="#111827"
-        )
-        tarjetas.pack(fill="x", padx=12, pady=5)
+        tarjetas = tk.Frame(self.ventana, bg="#111827")
+        tarjetas.pack(fill="x", padx=12, pady=4)
 
         self.crear_tarjeta(tarjetas, "ESTADOS", "7", 0)
         self.crear_tarjeta(tarjetas, "CONEXIONES", "10", 1)
         self.crear_tarjeta(tarjetas, "RECORRIDO", "Pendiente", 2)
         self.crear_tarjeta(tarjetas, "COSTO TOTAL", "$0", 3)
 
-        controles = tk.Frame(
-            self.ventana,
-            bg="#172033"
-        )
-        controles.pack(fill="x", padx=12, pady=5)
+        controles = tk.Frame(self.ventana, bg="#172033")
+        controles.pack(fill="x", padx=12, pady=4)
 
         tk.Label(
             controles,
             text="SELECCIONA EL INICIO Y DESTINO",
-            font=("Arial", 11, "bold"),
+            font=("Arial", 10, "bold"),
             bg="#172033",
             fg="white"
-        ).pack(pady=5)
+        ).pack(pady=4)
 
-        seleccion = tk.Frame(
-            controles,
-            bg="#172033"
-        )
-        seleccion.pack(pady=4)
+        seleccion = tk.Frame(controles, bg="#172033")
+        seleccion.pack()
 
         estados = ["Cualquiera"] + self.grafo.obtener_estados()
 
@@ -228,7 +203,7 @@ class Aplicacion:
             seleccion,
             values=estados,
             state="readonly",
-            width=18
+            width=17
         )
         self.origen.set("Cualquiera")
         self.origen.grid(row=0, column=1, padx=5)
@@ -244,19 +219,16 @@ class Aplicacion:
             seleccion,
             values=estados,
             state="readonly",
-            width=18
+            width=17
         )
         self.destino.set("Cualquiera")
         self.destino.grid(row=0, column=3, padx=5)
 
-        botones = tk.Frame(
-            controles,
-            bg="#172033"
-        )
-        botones.pack(pady=7)
+        botones = tk.Frame(controles, bg="#172033")
+        botones.pack(pady=6)
 
         opciones = [
-            ("A - SIN REPETIR ESTADOS", self.inciso_a, "#2563eb"),
+            ("A - SIN REPETIR", self.inciso_a, "#2563eb"),
             ("B - CON REPETICION", self.inciso_b, "#7c3aed"),
             ("BUSCAR ALTERNATIVAS", self.recomendar_rutas, "#d97706"),
             ("MOSTRAR RELACIONES", self.mostrar_relaciones, "#0f766e"),
@@ -271,30 +243,15 @@ class Aplicacion:
                 bg=color,
                 fg="white",
                 font=("Arial", 8, "bold"),
-                width=21,
+                width=19,
                 height=2
             ).grid(row=0, column=i, padx=3)
 
-        contenido = tk.Frame(
-            self.ventana,
-            bg="#111827"
-        )
-        contenido.pack(
-            fill="both",
-            expand=True,
-            padx=12,
-            pady=5
-        )
+        contenido = tk.Frame(self.ventana, bg="#111827")
+        contenido.pack(fill="both", expand=True, padx=12, pady=4)
 
-        izquierda = tk.Frame(
-            contenido,
-            bg="#172033"
-        )
-        izquierda.pack(
-            side="left",
-            fill="both",
-            expand=True
-        )
+        izquierda = tk.Frame(contenido, bg="#172033")
+        izquierda.pack(side="left", fill="both", expand=True)
 
         tk.Label(
             izquierda,
@@ -302,51 +259,22 @@ class Aplicacion:
             bg="#172033",
             fg="white",
             font=("Arial", 11, "bold")
-        ).pack(pady=5)
+        ).pack(pady=4)
 
         self.canvas = tk.Canvas(
             izquierda,
             bg="#f1f5f9",
-            highlightthickness=0,
-            height=400
+            highlightthickness=0
         )
-        self.canvas.pack(
-            fill="both",
-            expand=True,
-            padx=5,
-            pady=5
-        )
+        self.canvas.pack(fill="both", expand=True, padx=5, pady=5)
 
-        self.canvas.bind(
-            "<Configure>",
-            self.actualizar_grafo
-        )
+        self.canvas.bind("<Configure>", self.actualizar_grafo)
+        self.canvas.bind("<ButtonPress-1>", self.iniciar_arrastre)
+        self.canvas.bind("<B1-Motion>", self.mover_estado)
+        self.canvas.bind("<ButtonRelease-1>", self.terminar_arrastre)
 
-        self.canvas.bind(
-            "<ButtonPress-1>",
-            self.iniciar_arrastre
-        )
-
-        self.canvas.bind(
-            "<B1-Motion>",
-            self.mover_estado
-        )
-
-        self.canvas.bind(
-            "<ButtonRelease-1>",
-            self.terminar_arrastre
-        )
-
-        derecha = tk.Frame(
-            contenido,
-            bg="#172033",
-            width=320
-        )
-        derecha.pack(
-            side="right",
-            fill="y",
-            padx=(7, 0)
-        )
+        derecha = tk.Frame(contenido, bg="#172033", width=310)
+        derecha.pack(side="right", fill="y", padx=(7, 0))
         derecha.pack_propagate(False)
 
         tk.Label(
@@ -354,8 +282,8 @@ class Aplicacion:
             text="RESULTADOS Y ALTERNATIVAS",
             bg="#172033",
             fg="#5eead4",
-            font=("Arial", 11, "bold")
-        ).pack(pady=7)
+            font=("Arial", 10, "bold")
+        ).pack(pady=6)
 
         self.lista = tk.Listbox(
             derecha,
@@ -363,14 +291,10 @@ class Aplicacion:
             fg="white",
             selectbackground="#0f766e",
             font=("Arial", 9),
-            height=7
+            height=6
         )
-        self.lista.pack(fill="x", padx=8, pady=5)
-
-        self.lista.bind(
-            "<<ListboxSelect>>",
-            self.seleccionar_ruta
-        )
+        self.lista.pack(fill="x", padx=8, pady=4)
+        self.lista.bind("<<ListboxSelect>>", self.seleccionar_ruta)
 
         tk.Label(
             derecha,
@@ -390,23 +314,21 @@ class Aplicacion:
             padx=8,
             pady=8
         )
-        self.resultado.pack(
-            fill="both",
-            expand=True,
-            padx=8,
-            pady=5
-        )
+        self.resultado.pack(fill="both", expand=True, padx=8, pady=5)
 
         tk.Label(
             self.ventana,
             text="RELACIONES Y COSTOS DE TRASLADO",
             bg="#111827",
             fg="white",
-            font=("Arial", 11, "bold")
-        ).pack(pady=4)
+            font=("Arial", 10, "bold")
+        ).pack(pady=3)
+
+        tabla_frame = tk.Frame(self.ventana, bg="#111827")
+        tabla_frame.pack(fill="x", padx=20, pady=3)
 
         self.tabla = ttk.Treeview(
-            self.ventana,
+            tabla_frame,
             columns=("origen", "destino", "costo"),
             show="headings",
             height=3
@@ -416,19 +338,22 @@ class Aplicacion:
         self.tabla.heading("destino", text="Estado de destino")
         self.tabla.heading("costo", text="Costo de referencia")
 
-        self.tabla.column("origen", anchor="center")
-        self.tabla.column("destino", anchor="center")
-        self.tabla.column("costo", anchor="center")
+        self.tabla.column("origen", anchor="center", width=200)
+        self.tabla.column("destino", anchor="center", width=200)
+        self.tabla.column("costo", anchor="center", width=180)
 
-        self.tabla.pack(
-            fill="x",
-            padx=20,
-            pady=5
+        barra = ttk.Scrollbar(
+            tabla_frame,
+            orient="vertical",
+            command=self.tabla.yview
         )
+
+        self.tabla.configure(yscrollcommand=barra.set)
+        self.tabla.pack(side="left", fill="x", expand=True)
+        barra.pack(side="right", fill="y")
 
         estilo = ttk.Style()
         estilo.theme_use("clam")
-
         estilo.configure(
             "Treeview",
             background="#26364d",
@@ -436,33 +361,20 @@ class Aplicacion:
             fieldbackground="#26364d",
             rowheight=22
         )
-
         estilo.configure(
             "Treeview.Heading",
             background="#0f766e",
             foreground="white"
         )
 
-        self.mostrar_relaciones()
+        self.dibujar_grafo()
 
     def crear_tarjeta(self, padre, titulo, valor, columna):
-        tarjeta = tk.Frame(
-            padre,
-            bg="#172033",
-            height=60
-        )
+        tarjeta = tk.Frame(padre, bg="#172033", height=55)
+        tarjeta.grid(row=0, column=columna, sticky="ew", padx=5)
+        tarjeta.grid_propagate(False)
 
-        tarjeta.grid(
-            row=0,
-            column=columna,
-            sticky="ew",
-            padx=5
-        )
-
-        padre.grid_columnconfigure(
-            columna,
-            weight=1
-        )
+        padre.grid_columnconfigure(columna, weight=1)
 
         tk.Label(
             tarjeta,
@@ -470,12 +382,12 @@ class Aplicacion:
             font=("Arial", 8, "bold"),
             bg="#172033",
             fg="#94a3b8"
-        ).pack(pady=(5, 0))
+        ).pack(pady=(3, 0))
 
         etiqueta = tk.Label(
             tarjeta,
             text=valor,
-            font=("Arial", 14, "bold"),
+            font=("Arial", 13, "bold"),
             bg="#172033",
             fg="#5eead4"
         )
@@ -516,6 +428,7 @@ class Aplicacion:
 
         self.lista.delete(0, tk.END)
         self.alternativas = rutas[:3]
+        self.tipo_actual = tipo
 
         if not self.alternativas:
             messagebox.showwarning(
@@ -523,8 +436,6 @@ class Aplicacion:
                 "No se encontro un recorrido que cumpla las condiciones."
             )
             return
-
-        self.tipo_actual = tipo
 
         for i, alternativa in enumerate(self.alternativas, 1):
             self.lista.insert(
@@ -540,13 +451,11 @@ class Aplicacion:
     def recomendar_rutas(self):
         inicio, destino = self.obtener_seleccion()
 
-        rutas = self.grafo.buscar_alternativas(
-            inicio,
-            destino
-        )
+        rutas = self.grafo.buscar_alternativas(inicio, destino)
 
         self.lista.delete(0, tk.END)
         self.alternativas = rutas[:3]
+        self.tipo_actual = "ALTERNATIVAS"
 
         if not self.alternativas:
             messagebox.showwarning(
@@ -554,8 +463,6 @@ class Aplicacion:
                 "No se encontraron rutas posibles."
             )
             return
-
-        self.tipo_actual = "ALTERNATIVAS"
 
         for i, alternativa in enumerate(self.alternativas, 1):
             self.lista.insert(
@@ -566,15 +473,11 @@ class Aplicacion:
 
         menos_traslados = min(
             rutas,
-            key=lambda x: (
-                x["traslados"],
-                x["costo"]
-            )
+            key=lambda x: (x["traslados"], x["costo"])
         )
 
         if menos_traslados not in self.alternativas:
             self.alternativas.append(menos_traslados)
-
             self.lista.insert(
                 tk.END,
                 f"MENOS TRASLADOS | ${menos_traslados['costo']:,} | "
@@ -610,17 +513,7 @@ class Aplicacion:
         self.resultado.insert(
             tk.END,
             f"{self.tipo_actual}\n\n"
-        )
-
-        self.resultado.insert(
-            tk.END,
-            "RECORRIDO:\n"
-            + " -> ".join(self.ruta)
-            + "\n\n"
-        )
-
-        self.resultado.insert(
-            tk.END,
+            f"RECORRIDO:\n{' -> '.join(self.ruta)}\n\n"
             f"Costo total: ${alternativa['costo']:,} MXN\n"
             f"Traslados: {alternativa['traslados']}\n"
             f"Estados diferentes: {len(set(self.ruta))}\n"
@@ -640,10 +533,24 @@ class Aplicacion:
             )
 
     def mostrar_relaciones(self):
+        self.ruta = []
+        self.alternativas = []
+        self.lista.delete(0, tk.END)
+
         for elemento in self.tabla.get_children():
             self.tabla.delete(elemento)
 
-        for origen, destino, costo in self.grafo.obtener_relaciones():
+        relaciones = self.grafo.obtener_relaciones()
+
+        self.resultado.delete("1.0", tk.END)
+        self.resultado.insert(
+            tk.END,
+            "TODAS LAS RELACIONES DEL GRAFO\n\n"
+            f"Estados registrados: {len(self.grafo.obtener_estados())}\n"
+            f"Conexiones existentes: {len(relaciones)}\n\n"
+        )
+
+        for i, (origen, destino, costo) in enumerate(relaciones, 1):
             self.tabla.insert(
                 "",
                 "end",
@@ -653,6 +560,17 @@ class Aplicacion:
                     f"${costo:,} MXN"
                 )
             )
+
+            self.resultado.insert(
+                tk.END,
+                f"{i}. {origen} <-> {destino}\n"
+                f"   Costo de traslado: ${costo:,} MXN\n\n"
+            )
+
+        self.tarjeta_recorrido.config(text="RELACIONES")
+        self.tarjeta_costo.config(text="$0")
+
+        self.dibujar_grafo()
 
     def obtener_coordenadas(self):
         ancho = self.canvas.winfo_width()
@@ -667,9 +585,10 @@ class Aplicacion:
         coordenadas = {}
 
         for estado, (px, py) in self.posiciones.items():
-            x = margen_x + px * espacio_x
-            y = margen_y + py * espacio_y
-            coordenadas[estado] = (x, y)
+            coordenadas[estado] = (
+                margen_x + px * espacio_x,
+                margen_y + py * espacio_y
+            )
 
         return coordenadas
 
@@ -681,7 +600,6 @@ class Aplicacion:
             return
 
         self.canvas.delete("all")
-
         coordenadas = self.obtener_coordenadas()
 
         for origen, destino, costo in self.grafo.obtener_relaciones():
